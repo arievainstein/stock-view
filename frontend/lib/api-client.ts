@@ -1,4 +1,14 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+// Server-side (SSR/ISR): Vercel injects VERCEL_URL at runtime; fall back to
+// the explicit API_URL env var or localhost for local dev.
+// Client-side: NEXT_PUBLIC_API_URL is baked in at build time; an empty string
+// means relative URLs, which Vercel rewrites route to the Python function.
+const BASE =
+  typeof window === "undefined"
+    ? process.env.API_URL ??
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:8000")
+    : (process.env.NEXT_PUBLIC_API_URL ?? "")
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { next: { revalidate: 60 } })

@@ -1,4 +1,7 @@
 {
+  "projectSettings": {
+    "framework": "services"
+  },
     "experimentalServices": {
         "frontend": {
             "root": "frontend",
@@ -8,6 +11,7 @@
         "backend": {
             "root": "backend",
             "routePrefix": "/api",
+            "framework": "fastapi",
             "entrypoint": "main.py"
         }
     }

@@ -1,10 +1,15 @@
 {
-    "experimentalServices": {
-        "backend": {
-            "root": "backend",
-            "routePrefix": "/",
-            "framework": "fastapi",
-            "entrypoint": "main.py"
+    "framework": "other",
+    "functions": {
+        "backend/main.py": {
+            "maxDuration": 30,
+            "includeFiles": "backend/assets/**,backend/data/**"
         }
-    }
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/backend/main.py"
+        }
+    ]
 }

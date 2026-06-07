@@ -1,5 +1,4 @@
 {
-    "framework": "other",
     "functions": {
         "backend/main.py": {
             "maxDuration": 30,

@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
 from config import settings
 from api.routes import stocks, market, calculations, news
+
+BASE_DIR = Path(__file__).resolve().parent
+ASSETS_DIR = BASE_DIR / "assets"
+INDEX_FILE = ASSETS_DIR / "index.html"
 
 app = FastAPI(
     title="Stock View API",
@@ -26,3 +33,17 @@ app.include_router(news.router, prefix="/api")
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+# Serve Next static chunks from the exported frontend output.
+if (ASSETS_DIR / "_next").exists():
+    app.mount("/_next", StaticFiles(directory=ASSETS_DIR / "_next"), name="next-static")
+
+# Serve exported files directly when they exist, otherwise fall back to index.html.
+@app.get("/{catchall:path}")
+async def serve_react_app(catchall: str):
+    requested_path = (ASSETS_DIR / catchall).resolve()
+
+    if catchall and requested_path.is_file() and ASSETS_DIR in requested_path.parents:
+        return FileResponse(requested_path)
+
+    return FileResponse(INDEX_FILE)

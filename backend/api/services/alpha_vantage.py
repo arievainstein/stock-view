@@ -1,9 +1,12 @@
 import httpx
 import time
+import logging
 from functools import lru_cache
 from typing import Any
 from config import settings
 from api.services import demo_data
+
+logger = logging.getLogger(__name__)
 
 # Simple in-memory cache
 _cache: dict[str, tuple[Any, float]] = {}
@@ -23,19 +26,22 @@ def _cache_set(key: str, value: Any) -> None:
 
 
 async def fetch_alpha_vantage(params: dict) -> dict:
-    #print(f"API key: {settings.alpha_vantage_api_key}")
+    logger.info("Alpha Vantage request function=%s", params.get("function"))
     if settings.alpha_vantage_api_key == "demo":
+        logger.info("Using demo data provider")
         return demo_data.get_demo_response(params)
 
     params["apikey"] = settings.alpha_vantage_api_key
     cache_key = str(sorted(params.items()))
     cached = _cache_get(cache_key)
     if cached is not None:
+        logger.info("Cache hit for function=%s", params.get("function"))
         return cached
     async with httpx.AsyncClient() as client:
         response = await client.get(settings.alpha_vantage_base_url, params=params, timeout=15)
         response.raise_for_status()
         data = response.json()
+    logger.info("Alpha Vantage response received for function=%s", params.get("function"))
     _cache_set(cache_key, data)
     return data
 

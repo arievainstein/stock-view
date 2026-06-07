@@ -7,8 +7,11 @@ import csv
 import math
 import pathlib
 import random
+import logging
 from datetime import date, timedelta
 from itertools import groupby
+
+logger = logging.getLogger(__name__)
 
 # ── CSV data directory ────────────────────────────────────────────────────────
 # backend/data/<TICKER>.csv
@@ -181,7 +184,7 @@ def _price_series(symbol: str, days: int, freq: str = "D") -> list[tuple[str, fl
 
 def global_quote(symbol: str) -> dict:
     csv_rows = _load_csv(symbol)
-    print(f"Loaded {len(csv_rows) if csv_rows else 0} CSV rows for {symbol}")
+    logger.info("Loaded %s CSV rows for symbol=%s", len(csv_rows) if csv_rows else 0, symbol)
     if csv_rows and len(csv_rows) >= 2:
         # Use the last two rows for price and previous close
         prev_row = csv_rows[-2]

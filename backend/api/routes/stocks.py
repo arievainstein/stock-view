@@ -1,7 +1,10 @@
 from fastapi import APIRouter, HTTPException, Query
+import logging
 from api.models.stock import Stock, StockChartResponse, ChartDataPoint, StockOverview, PeriodStats
 from api.services import alpha_vantage
 from api.services.calculations import linear_regression_channel
+
+logger = logging.getLogger(__name__)
 
 # Timeframe → number of bars to keep per interval type (None = keep all).
 # Intraday is always compact (~100 bars) so no slicing needed.
@@ -40,6 +43,7 @@ def _format_market_cap(cap: float) -> str:
 @router.get("/quote/{symbol}", response_model=Stock)
 async def get_stock_quote(symbol: str):
     """Get real-time quote for a stock symbol."""
+    logger.info("Quote request received for symbol=%s", symbol)
     quote = await alpha_vantage.get_quote(symbol.upper())
     if not quote or "05. price" not in quote:
         raise HTTPException(status_code=404, detail=f"Symbol '{symbol}' not found")
@@ -76,6 +80,13 @@ async def get_stock_chart(
     timeframe: str = Query("3M", enum=_TIMEFRAMES),
 ):
     """Get OHLCV chart data for a symbol, optionally with regression channel."""
+    logger.info(
+        "Chart request received for symbol=%s interval=%s timeframe=%s regression=%s",
+        symbol,
+        interval,
+        timeframe,
+        regression,
+    )
     symbol = symbol.upper()
 
     if interval == "daily":
@@ -142,6 +153,7 @@ async def get_stock_chart(
 @router.get("/overview/{symbol}", response_model=StockOverview)
 async def get_stock_overview(symbol: str):
     """Get company fundamentals and overview from Alpha Vantage OVERVIEW."""
+    logger.info("Overview request received for symbol=%s", symbol)
     data = await alpha_vantage.get_overview(symbol.upper())
     if not data or "Symbol" not in data:
         raise HTTPException(status_code=404, detail=f"Overview not found for '{symbol}'")
@@ -165,6 +177,7 @@ async def get_stock_overview(symbol: str):
 @router.get("/search")
 async def search_stocks(q: str = Query(..., min_length=1)):
     """Search for stock symbols by keyword."""
+    logger.info("Symbol search request received for query=%s", q)
     results = await alpha_vantage.search_symbol(q)
     return [
         {

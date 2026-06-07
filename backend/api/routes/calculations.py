@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
+import logging
 from api.models.stock import ChartDataPoint, RegressionChannel
 from api.services import alpha_vantage
 from api.services.calculations import (
@@ -7,6 +8,8 @@ from api.services.calculations import (
     simple_moving_average,
     exponential_moving_average,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/calculations", tags=["calculations"])
 
@@ -26,6 +29,7 @@ _TIMEFRAME_ENUM = list(_TIMEFRAME_BARS.keys())
 
 
 async def _get_daily_data(symbol: str, outputsize: str = "full") -> list[ChartDataPoint]:
+    logger.info("Loading daily data for symbol=%s outputsize=%s", symbol, outputsize)
     raw = await alpha_vantage.get_daily(symbol, outputsize=outputsize)
     series = raw.get("Time Series (Daily)")
     if not series:
@@ -49,6 +53,7 @@ async def get_regression_channel(
     std_multiplier: float = Query(2.0, ge=0.5, le=5.0),
 ):
     """Calculate and return a linear regression channel for a symbol."""
+    logger.info("Regression request for symbol=%s std_multiplier=%s", symbol, std_multiplier)
     data = await _get_daily_data(symbol.upper())
     return linear_regression_channel(data, std_multiplier)
 
@@ -65,6 +70,13 @@ async def get_regression_log_channel(
     Regression is performed on log(close), so bands represent
     proportional (percentage) deviations rather than absolute ones.
     """
+    logger.info(
+        "Log regression request for symbol=%s length=%s upper_mult=%s lower_mult=%s",
+        symbol,
+        length,
+        upper_mult,
+        lower_mult,
+    )
     data = await _get_daily_data(symbol.upper(), outputsize="full")
     return linear_regression_channel_log(data, length=length, upper_mult=upper_mult, lower_mult=lower_mult)
 
@@ -110,6 +122,7 @@ async def get_regression_log_wide(
 @router.get("/sma/{symbol}")
 async def get_sma(symbol: str, period: int = Query(20, ge=2, le=200)):
     """Calculate Simple Moving Average for a symbol."""
+    logger.info("SMA request for symbol=%s period=%s", symbol, period)
     data = await _get_daily_data(symbol.upper())
     sma = simple_moving_average(data, period)
     times = [p.time for p in data]
@@ -119,6 +132,7 @@ async def get_sma(symbol: str, period: int = Query(20, ge=2, le=200)):
 @router.get("/ema/{symbol}")
 async def get_ema(symbol: str, period: int = Query(20, ge=2, le=200)):
     """Calculate Exponential Moving Average for a symbol."""
+    logger.info("EMA request for symbol=%s period=%s", symbol, period)
     data = await _get_daily_data(symbol.upper())
     ema = exponential_moving_average(data, period)
     times = [p.time for p in data]

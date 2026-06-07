@@ -1,6 +1,9 @@
 import numpy as np
+import logging
 from sklearn.linear_model import LinearRegression
 from api.models.stock import RegressionChannel, ChartDataPoint
+
+logger = logging.getLogger(__name__)
 
 
 def linear_regression_channel(data: list[ChartDataPoint], std_multiplier: float = 2.0) -> RegressionChannel:
@@ -8,6 +11,7 @@ def linear_regression_channel(data: list[ChartDataPoint], std_multiplier: float 
     Calculate a linear regression channel over OHLC close prices.
     Returns upper, middle (regression line), and lower channel lines.
     """
+    logger.info("Computing linear regression channel with points=%s std_multiplier=%s", len(data), std_multiplier)
     closes = np.array([p.close for p in data], dtype=float)
     x = np.arange(len(closes))
 
@@ -48,6 +52,13 @@ def linear_regression_channel_log(
         upper_mult: Standard-deviation multiplier for the upper band.
         lower_mult: Standard-deviation multiplier for the lower band.
     """
+    logger.info(
+        "Computing log regression channel with points=%s length=%s upper_mult=%s lower_mult=%s",
+        len(data),
+        length,
+        upper_mult,
+        lower_mult,
+    )
     # Use only the most recent `length` bars
     window = data[-length:] if len(data) > length else data
 

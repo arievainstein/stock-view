@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
+import logging
 from api.models.stock import MarketIndex, Stock, SectorPerformance
 from api.services import alpha_vantage
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/market", tags=["market"])
 
@@ -31,6 +34,7 @@ SECTOR_NAME_MAP = {
 @router.get("/indices", response_model=list[MarketIndex])
 async def get_market_indices():
     """Get current values for major market indices (via ETF proxies)."""
+    logger.info("Market indices request received")
     results = []
     for name, symbol in INDEX_SYMBOLS.items():
         try:
@@ -75,6 +79,7 @@ def _parse_mover(item: dict) -> Stock:
 @router.get("/gainers", response_model=list[Stock])
 async def get_top_gainers():
     """Get today's top gaining stocks."""
+    logger.info("Top gainers request received")
     data = await alpha_vantage.get_top_gainers_losers()
     gainers = data.get("top_gainers", [])
     return [_parse_mover(g) for g in gainers]
@@ -83,6 +88,7 @@ async def get_top_gainers():
 @router.get("/losers", response_model=list[Stock])
 async def get_top_losers():
     """Get today's top losing stocks."""
+    logger.info("Top losers request received")
     data = await alpha_vantage.get_top_gainers_losers()
     losers = data.get("top_losers", [])
     return [_parse_mover(l) for l in losers]
@@ -91,6 +97,7 @@ async def get_top_losers():
 @router.get("/sectors", response_model=list[SectorPerformance])
 async def get_sector_performance():
     """Get today's sector performance."""
+    logger.info("Sector performance request received")
     data = await alpha_vantage.get_sector_performance()
     # Use "Rank A: Real-Time Performance"
     realtime = data.get("Rank A: Real-Time Performance", {})

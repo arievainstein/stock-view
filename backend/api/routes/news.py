@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Query
+import logging
 from api.models.stock import NewsItem
 from api.services import alpha_vantage
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/news", tags=["news"])
 
@@ -30,6 +33,7 @@ async def get_news(
     limit: int = Query(10, ge=1, le=50),
 ):
     """Get latest market news, optionally filtered by symbol."""
+    logger.info("News request received for symbol=%s limit=%s", symbol, limit)
     data = await alpha_vantage.get_news_sentiment(symbol=symbol, limit=limit)
     feed = data.get("feed", [])
     items = []

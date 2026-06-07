@@ -1,14 +1,14 @@
 {
     "functions": {
-        "backend/main.py": {
+        "main.py": {
             "maxDuration": 30,
-            "includeFiles": "backend/assets/**,backend/data/**"
+            "includeFiles": "assets/**,data/**"
         }
     },
     "rewrites": [
         {
             "source": "/(.*)",
-            "destination": "/backend/main.py"
+            "destination": "/main.py"
         }
     ]
 }

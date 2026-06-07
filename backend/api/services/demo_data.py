@@ -12,7 +12,7 @@ from itertools import groupby
 
 # ── CSV data directory ────────────────────────────────────────────────────────
 # backend/data/<TICKER>.csv
-DATA_DIR = pathlib.Path(__file__).resolve().parent.parent.parent / "data"
+DATA_DIR = pathlib.Path(__file__).parent.parent.parent / "data"
 
 # Cache parsed CSVs so we only read each file once per process lifetime.
 _csv_cache: dict[str, list[tuple[str, float, float, float, float, int]] | None] = {}
